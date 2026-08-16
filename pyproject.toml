@@ -1,0 +1,22 @@
+[project]
+name = "updall"
+version = "1.0.0"
+description = "Simple update utility."
+readme = "README.md"
+authors = [
+    { name = "Firegem", email = "5158194+Mrfiregem@users.noreply.github.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "click>=8.4.2",
+    "platformdirs>=4.11.3",
+    "pydantic>=2.13.4",
+    "pyyaml>=6.0.3",
+]
+
+[project.scripts]
+updall = "updall:main"
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"
