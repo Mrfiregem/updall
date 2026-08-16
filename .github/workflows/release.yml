@@ -1,6 +1,7 @@
 name: "Publish release to PyPI"
 
 on:
+  workflow_dispatch:
   push:
     tags:
       # Publish on version tags, e.g. v0.1.0
