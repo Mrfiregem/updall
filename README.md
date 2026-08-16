@@ -81,7 +81,7 @@ Nothing unused to uninstall
 shell:
   - /bin/sh
   - -c
-# The program's default log level, from 0 to 3.
+# The program's default log level, from 0 to 2.
 # Same as if passing `--verbose` that many times.
 log_level: 0
 # A list of PackagerEntries.

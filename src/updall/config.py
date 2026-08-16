@@ -2,8 +2,8 @@ import logging
 import os
 import platform
 import shutil
+import sys
 from pathlib import Path
-from typing import Literal
 
 import yaml
 from pydantic import BaseModel, Field, field_validator
@@ -16,7 +16,7 @@ class WhenCondition(BaseModel):
 
     has_exe: str | None = None
     """Used to check if the caller has `exe` on their PATH."""
-    is_os: Literal["Windows", "Darwin", "Linux"] | None = None
+    is_os: str | None = None
     """Used to check if the caller is on Windows, Linux, or MacOS."""
     env_equals: dict[str, str] | None = None
     """Used to check if all environment variable dict keys exist with values equaling dict values."""
@@ -40,7 +40,7 @@ class UpdAllConfig(BaseModel):
     shell: list[str] = ["/bin/sh", "-c"]
     """The shell command used to run each PackagerEntry's `update` and `clean` fields."""
     log_level: int = Field(default=0, ge=0, lt=3)
-    """The log level to use, as if you passed `--verbose` that many times [0-3]."""
+    """The log level to use, as if you passed `--verbose` that many times [0-2]."""
     entries: list[PackagerEntry]
 
     @field_validator("shell")
@@ -68,6 +68,9 @@ def read_config(config_file: Path) -> UpdAllConfig:
             raise ValueError("Config file was empty.")
         logger.debug(f"{raw_yaml_data = }")
         return UpdAllConfig(**raw_yaml_data)  # pyright: ignore[reportAny]
+    except yaml.YAMLError, TypeError:
+        logger.error("Failed to parse config file.")
+        raise
     except ValueError:
         logger.error("Failed to validate config file.")
         raise
@@ -81,9 +84,10 @@ def resolve_when_conditions(*when_conditions: WhenCondition) -> bool:
 
 
 def resolve_when_condition(cond: WhenCondition) -> bool:
+    valid_os_strings = (s.lower() for s in (platform.system(), sys.platform))
     if cond.has_exe is not None and not shutil.which(cond.has_exe):
         return False
-    if cond.is_os is not None and cond.is_os != platform.system():
+    if cond.is_os is not None and cond.is_os.lower() not in valid_os_strings:
         return False
     if cond.env_equals is not None and not all(  # noqa: SIM103
         os.environ.get(key) == value for key, value in cond.env_equals.items()
