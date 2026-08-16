@@ -2,7 +2,7 @@
 
 Simple command runner designed to run package managers if they exist on the system.
 
-```console
+```shellsession
 $ updall --help
 Usage: updall [OPTIONS]
 
@@ -15,6 +15,23 @@ Options:
                           show more logging.
   -c, --config-file FILE  Alternate location of the config file.  [default:
                           /home/user/.config/updall/config.yaml]
+```
+
+## Installing
+
+You can install `updall` directly from [PyPI](https://pypi.org/project/updall/). It's recommended to install Python scripts using a tool like [`pipx`](https://pipx.pypa.io/stable/) or [`uv`](https://github.com/astral-sh/uv). If either of those commands are installed, simply run this command to add `updall` to your PATH.
+
+```nushell
+uv tool install updall  # If you're using `uv`
+pipx install updall     # If you're using `pipx`
+```
+
+If you'd rather build from source, that's easy too.
+
+```nushell
+git clone https://github.com/Mrfiregem/updall.git
+cd updall
+uv build
 ```
 
 ## Getting started
