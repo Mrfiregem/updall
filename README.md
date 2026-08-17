@@ -13,8 +13,9 @@ Options:
   -V, --version           Show the version and exit.
   -v, --verbose           Output debug info to stderr. Pass multiple times to
                           show more logging.
-  -c, --config-file FILE  Alternate location of the config file.  [default:
-                          /home/user/.config/updall/config.yaml]
+  -c, --config-file FILE  Alternate location of the config file.
+  -d, --disable TEXT      Disable an entry (repeatable).
+  -n, --dry-run           Only print what updaters would run.
 ```
 
 ## Installing
