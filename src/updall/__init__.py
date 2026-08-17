@@ -130,7 +130,13 @@ def run_cleaners(
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Alternate location of the config file.",
 )
-@click.option("-d", "--disable", multiple=True, help="Disable an entry (repeatable).")
+@click.option(
+    "-d",
+    "--disable",
+    multiple=True,
+    metavar="ENTRY",
+    help="Disable an entry (repeatable).",
+)
 @click.option(
     "-n", "--dry-run", is_flag=True, help="Only print what updaters would run."
 )
