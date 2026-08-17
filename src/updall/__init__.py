@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 def get_default_config_file() -> Path:
     """Return the path to the config file `updall` checks if the user doesn't provide their own."""
     name = get_app_name()
-    return user_config_path(name) / "config.yaml"
+    return user_config_path(name, False) / "config.yaml"
 
 
 def get_log_level(verbosity: int) -> int:
