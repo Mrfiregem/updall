@@ -71,7 +71,12 @@ def test_resolve_when_conditions(monkeypatch: pytest.MonkeyPatch):
         uc.WhenCondition(has_exe="not-a-real-cmd"),
         uc.WhenCondition(is_os="NotWindows"),
         uc.WhenCondition(env_equals={"FOO": "bar"}),
+        uc.WhenCondition(is_not=uc.WhenCondition(env_equals={"FOO": "baz"})),
     ],
 )
-def test_resolve_failed_when_condition(cond: uc.WhenCondition):
+def test_resolve_failed_when_condition(
+    cond: uc.WhenCondition, monkeypatch: pytest.MonkeyPatch
+):
+    """Check that each when condition fails"""
+    monkeypatch.setenv("FOO", "baz")
     assert not uc.resolve_when_condition(cond)

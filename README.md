@@ -122,14 +122,26 @@ when: []
 
 ### WhenCondition
 
+A when condition is an object that can define various kinds of checks to determine if the entry it's tied to can be run.
+When all fields of a when condition are true, the entire when condition object resolves to true. If a field fails, the entire when condition also fails.
+
+If an entry defines multiple when condition objects, that entry gets run when any condition object resolves to true, even if others fail.
+
 ```yaml
 # Check if the user has a specific command on the PATH.
-has_exe: "<some command on PATH>"
+# A `str` matching some executable name or full path.
+has_exe: null # e.g. "flatpak"
+
 # Check if the user is running on a certain operating system.
-is_os: Windows # or 'Darwin' or 'Linux'
-# A dict of keys representing environment variable names, and values.
+# A `str` matching the value of `sys.platform` or `platform.system()` output
+is_os: null # e.g. "windows", "darwin", "win32", "linux"
+
 # Checks if all key variables exist and that their values match those defined.
-env_equals: {}
+# A `dict` of keys representing environment variable names, and values.
+env_equals: null # e.g. {"FOO": "bar"} is true if `$FOO` is exported with value "bar"
+
+# Checks if a when condition is *not* true
+is_not: null # e.g. {"has_exe": "/some/fake/command"}
 ```
 
 ## Example Config
@@ -142,15 +154,23 @@ entries:
     when:
       - has_exe: flatpak
         is_os: Linux
+
   - name: scoop
     update: scoop update --all
     when:
       - has_exe: scoop
         is_os: Windows
-  - name: pacman
+
+  - name: paru
     update: paru
     clean: paru -c
     when:
       - has_exe: paru
         is_os: Linux
+
+  - name: pacman
+    update: sudo pacman -Syu
+    when:
+      - is_not:
+          has_exe: paru
 ```

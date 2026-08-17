@@ -20,6 +20,7 @@ class WhenCondition(BaseModel):
     """Used to check if the caller is on Windows, Linux, or MacOS."""
     env_equals: dict[str, str] | None = None
     """Used to check if all environment variable dict keys exist with values equaling dict values."""
+    is_not: WhenCondition | None = None
 
 
 class PackagerEntry(BaseModel):
@@ -87,17 +88,21 @@ def resolve_when_conditions(*when_conditions: WhenCondition) -> bool:
 
 
 def resolve_when_condition(cond: WhenCondition) -> bool:
-    valid_os_strings = (s.casefold() for s in (platform.system(), sys.platform))
+    valid_os_strings = [s.casefold() for s in (platform.system(), sys.platform)]
+
+    if cond.is_not is not None and resolve_when_condition(cond.is_not):
+        logger.debug("`is_not` inner condition resolved True")
+        return False
     if cond.has_exe is not None and not shutil.which(cond.has_exe):
-        logger.debug("has_exe condition resolved False")
+        logger.debug("`has_exe` condition resolved False")
         return False
     if cond.is_os is not None and cond.is_os.casefold() not in valid_os_strings:
-        logger.debug("is_os condition resolved False")
+        logger.debug("`is_os` condition resolved False")
         return False
     if cond.env_equals is not None and not all(
         os.environ.get(key) == value for key, value in cond.env_equals.items()
     ):
-        logger.debug("env_equals condition resolved False")
+        logger.debug("`env_equals` condition resolved False")
         return False
 
     return True
