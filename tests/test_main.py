@@ -130,3 +130,24 @@ def test_retry_failed_entry(fake_config_dir: Path, monkeypatch: pytest.MonkeyPat
     runner = CliRunner()
     result = runner.invoke(updall.main, [])
     assert result.exit_code == 0
+
+
+def test_dry_run_output(fake_config_dir: Path):
+    config = fake_config_dir / "config.yaml"
+    data = {
+        "entries": [
+            {
+                "name": "foo",
+                "update": "evil_bad_command",
+                "clean": "even_eviler_command",
+            }
+        ]
+    }
+    with open(config, "w") as file:
+        yaml.safe_dump(data, file)
+
+    runner = CliRunner()
+    result = runner.invoke(updall.main, ["--dry-run"])
+    assert result.exit_code == 0
+    assert "Would run: << /bin/sh -c evil_bad_command >>" in result.stdout
+    assert "Would run: << /bin/sh -c even_eviler_command >>" in result.stdout

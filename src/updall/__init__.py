@@ -1,4 +1,5 @@
 import logging
+import shlex
 import subprocess
 import sys
 from pathlib import Path
@@ -49,7 +50,12 @@ def run_command(shell: list[str], command: str) -> None:
             raise subprocess.CalledProcessError(returncode, cmd=process.args)
 
 
-def run_updaters(shell: list[str], *entries: PackagerEntry) -> list[tuple[str, str]]:
+def run_updaters(
+    shell: list[str],
+    *entries: PackagerEntry,
+    disabled: list[str],
+    dry_run: bool = False,
+) -> list[tuple[str, str]]:
     """Loop over entries, run their updaters, and return a list of tuples of their names and cleaner scripts.
 
     1. Loop over all entries
@@ -61,7 +67,7 @@ def run_updaters(shell: list[str], *entries: PackagerEntry) -> list[tuple[str, s
 
     for entry in entries:
         logger.debug("Checking entry: %s", entry.name)
-        should_run = resolve_when_conditions(*entry.when)
+        should_run = entry.name not in disabled and resolve_when_conditions(*entry.when)
         logger.debug(f"{should_run = }")
         if should_run:
             print(f"\n :: [ {entry.name + '::update':^20} ] ::")
@@ -69,7 +75,10 @@ def run_updaters(shell: list[str], *entries: PackagerEntry) -> list[tuple[str, s
                 clean_cmds += [(entry.name, entry.clean)]
             while True:
                 try:
-                    run_command(shell, entry.update)
+                    if dry_run:
+                        print(f"Would run: << {shlex.join(shell + [entry.update])} >>")
+                    else:
+                        run_command(shell, entry.update)
                 except subprocess.CalledProcessError:
                     # If command exited with non-zero exit code, or failed,
                     # ask user if they want to skip to the next updater or try again.
@@ -85,7 +94,9 @@ def run_updaters(shell: list[str], *entries: PackagerEntry) -> list[tuple[str, s
     return clean_cmds
 
 
-def run_cleaners(shell: list[str], *cleaner_entries: tuple[str, str]) -> None:
+def run_cleaners(
+    shell: list[str], *cleaner_entries: tuple[str, str], dry_run: bool = False
+) -> None:
     """Loop over tuples of entry names and cleaner scripts, and run them.
 
     Their when conditions should already be checked by `run_updaters`, so no need to recheck.
@@ -93,7 +104,10 @@ def run_cleaners(shell: list[str], *cleaner_entries: tuple[str, str]) -> None:
     for entry_name, cmd in cleaner_entries:
         print(f"\n :: [ {entry_name + '::clean':^20} ] ::")
         try:
-            run_command(shell, cmd)
+            if dry_run:
+                print(f"Would run: << {shlex.join(shell + [cmd])} >>")
+            else:
+                run_command(shell, cmd)
         except subprocess.CalledProcessError:
             # For cleaners, we don't prompt to retry, we just go to the next one.
             logger.warning(f"The `clean` script for {entry_name} failed. Continuing...")
@@ -116,7 +130,11 @@ def run_cleaners(shell: list[str], *cleaner_entries: tuple[str, str]) -> None:
     type=click.Path(exists=True, dir_okay=False, path_type=Path),
     help="Alternate location of the config file.",
 )
-def main(config_file: Path, verbose: int) -> None:
+@click.option("-d", "--disable", multiple=True, help="Disable an entry (repeatable).")
+@click.option(
+    "-n", "--dry-run", is_flag=True, help="Only print what updaters would run."
+)
+def main(config_file: Path, verbose: int, disable: list[str], dry_run: bool) -> None:
     """A simple package manager update runner."""
     # Setup logging using verbosity flag
     logging.basicConfig(
@@ -137,7 +155,9 @@ def main(config_file: Path, verbose: int) -> None:
 
     # Loop over updaters
     print("Running Updaters ...")
-    clean_cmds = run_updaters(user_config.shell, *user_config.entries)
+    clean_cmds = run_updaters(
+        user_config.shell, *user_config.entries, disabled=disable, dry_run=dry_run
+    )
 
     # Loop over cleaners
-    run_cleaners(user_config.shell, *clean_cmds)
+    run_cleaners(user_config.shell, *clean_cmds, dry_run=dry_run)
