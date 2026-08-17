@@ -36,9 +36,17 @@ uv build
 
 ## Getting started
 
-Create a config file. You can find the path `updall` expects to find this file by calling `updall --help`, or you can specify your own location by passing the `-c / --config-file` flag when running the command.
+To start using `updall`, you must first create a config file. You can find the path `updall` expects its config file to be at on your system in the table below, or you can specify your own location by passing the `-c / --config-file` flag when running the command.
 
-You can see the entire config structure and its default values below, but the only key you need to use `updall` is `entries`. This should be a list of `PackagerEntries`, which are objects containing at least `name` and `update` fields. `name` should be a unique string identifier representing the packager the entry works with, and `update` is a command string that'll be called to update packages.
+| System  | Path to Configuration                              |
+| :------ | :------------------------------------------------- |
+| Linux   | `~/.config/updall/config.yaml`                     |
+| Windows | `C:\Users\<User>\AppData\Local\updall\config.yaml` |
+| MacOS   | `~/Library/Application Support/updall/config.yaml` |
+
+You can see the entire config structure and its default values [below](#config-reference), but the only key required to use `updall` is **`entries`**.
+
+This should be a list of `PackagerEntries`, which are objects containing at least `name` and `update` fields. `name` should be a unique string identifier representing the packager the entry works with, and `update` is a command string that'll be called to update packages.
 
 Once you've populated the config file with entries, all you need to do next is run `updall` with no arguments:
 
@@ -61,7 +69,7 @@ Looking for updates…
 
 Updates complete.
 
- :: [    pacman::update    ] ::
+ :: [    paru::update    ] ::
 [sudo] password for user:
 no new news
 :: Looking for PKGBUILD upgrades...
@@ -87,7 +95,7 @@ no new news
  :: [    flatpak::clean    ] ::
 Nothing unused to uninstall
 
- :: [    pacman::clean     ] ::
+ :: [    paru::clean     ] ::
  there is nothing to do
 ```
 
@@ -145,6 +153,8 @@ is_not: null # e.g. {"has_exe": "/some/fake/command"}
 ```
 
 ## Example Config
+
+This is the config used to run the command from the first code block.
 
 ```yaml
 entries:
