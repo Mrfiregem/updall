@@ -80,18 +80,24 @@ def read_config(config_file: Path) -> UpdAllConfig:
 
 
 def resolve_when_conditions(*when_conditions: WhenCondition) -> bool:
-    return any(resolve_when_condition(cond) for cond in when_conditions)
+    if when_conditions:
+        return any(resolve_when_condition(cond) for cond in when_conditions)
+    else:
+        return True
 
 
 def resolve_when_condition(cond: WhenCondition) -> bool:
-    valid_os_strings = (s.lower() for s in (platform.system(), sys.platform))
+    valid_os_strings = (s.casefold() for s in (platform.system(), sys.platform))
     if cond.has_exe is not None and not shutil.which(cond.has_exe):
+        logger.debug("has_exe condition resolved False")
         return False
-    if cond.is_os is not None and cond.is_os.lower() not in valid_os_strings:
+    if cond.is_os is not None and cond.is_os.casefold() not in valid_os_strings:
+        logger.debug("is_os condition resolved False")
         return False
-    if cond.env_equals is not None and not all(  # noqa: SIM103
+    if cond.env_equals is not None and not all(
         os.environ.get(key) == value for key, value in cond.env_equals.items()
     ):
+        logger.debug("env_equals condition resolved False")
         return False
 
     return True

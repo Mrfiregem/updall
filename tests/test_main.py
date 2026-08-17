@@ -43,12 +43,12 @@ def test_log_verbosity(verbosity: int, expected: int):
 
 
 def test_run_command_success(default_config: updall.config.UpdAllConfig):
-    updall.run_command(default_config, "true")
+    updall.run_command(default_config.shell, "true")
 
 
 def test_run_command_failure(default_config: updall.config.UpdAllConfig):
     with pytest.raises(subprocess.SubprocessError):
-        updall.run_command(default_config, "false")
+        updall.run_command(default_config.shell, "false")
 
 
 def test_commandline_bare_config(fake_config_dir: Path):
@@ -91,3 +91,42 @@ def test_cmdline_loop_entries(fake_config_dir: Path):
     assert result.exit_code == 0
     assert "always::update" in result.stdout
     assert "always::clean" in result.stdout
+
+
+def test_no_retry_failed_entry(fake_config_dir: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("builtins.input", lambda _: "n")  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
+    config = fake_config_dir / "config.yaml"
+    data = {"entries": [{"name": "foobar", "update": "false"}]}
+    with open(config, "w") as file:
+        yaml.safe_dump(data, file)
+
+    runner = CliRunner()
+    result = runner.invoke(updall.main, [])
+    assert result.exit_code == 0
+
+
+def test_retry_failed_entry(fake_config_dir: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr("builtins.input", lambda _: "y")  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
+
+    update_script = fake_config_dir / "fts.sh"
+    check = fake_config_dir / "succeed"
+    with open(update_script, "w") as file:
+        _ = file.write(f"""
+            #!/bin/sh
+            if [ -e '{check!s}' ]; then
+                true
+            else
+                touch '{check!s}'
+                false
+            fi
+        """)
+    update_script.chmod(0o755)
+
+    config = fake_config_dir / "config.yaml"
+    data = {"entries": [{"name": "foobar", "update": str(update_script)}]}
+    with open(config, "w") as file:
+        yaml.safe_dump(data, file)
+
+    runner = CliRunner()
+    result = runner.invoke(updall.main, [])
+    assert result.exit_code == 0

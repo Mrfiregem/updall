@@ -6,7 +6,11 @@ from pathlib import Path
 import click
 from platformdirs import user_config_path
 
-from updall.config import UpdAllConfig, read_config, resolve_when_conditions
+from updall.config import (
+    PackagerEntry,
+    read_config,
+    resolve_when_conditions,
+)
 
 
 def get_app_name() -> str:
@@ -35,13 +39,65 @@ def get_log_level(verbosity: int) -> int:
             return logging.DEBUG
 
 
-def run_command(config: UpdAllConfig, command: str):
-    with subprocess.Popen(config.shell + [command]) as process:
+def run_command(shell: list[str], command: str) -> None:
+    with subprocess.Popen(shell + [command]) as process:
         logger.info(f"Running command: {process.args}")
 
         returncode = process.wait()
         if returncode != 0:
+            logger.warning("%s returned non-zero exit code.", shell + [command])
             raise subprocess.CalledProcessError(returncode, cmd=process.args)
+
+
+def run_updaters(shell: list[str], *entries: PackagerEntry) -> list[tuple[str, str]]:
+    """Loop over entries, run their updaters, and return a list of tuples of their names and cleaner scripts.
+
+    1. Loop over all entries
+    2. Determine if updater should run by checking all WhenConditions
+    3. Store (entry.name, entry.clean) in result for later if it should run
+    4. If it should, run the entry.update script"""
+    clean_cmds: list[tuple[str, str]] = []
+    logger.debug("Starting updater loop...")
+
+    for entry in entries:
+        logger.debug("Checking entry: %s", entry.name)
+        should_run = resolve_when_conditions(*entry.when)
+        logger.debug(f"{should_run = }")
+        if should_run:
+            print(f"\n :: [ {entry.name + '::update':^20} ] ::")
+            if entry.clean is not None:
+                clean_cmds += [(entry.name, entry.clean)]
+            while True:
+                try:
+                    run_command(shell, entry.update)
+                except subprocess.CalledProcessError:
+                    # If command exited with non-zero exit code, or failed,
+                    # ask user if they want to skip to the next updater or try again.
+                    answer = input(
+                        f"Running update script for {entry.name} failed. Try again? [y/N]: "
+                    )
+                    if answer.casefold().startswith("y"):
+                        continue
+                    else:
+                        break
+                else:
+                    break
+    return clean_cmds
+
+
+def run_cleaners(shell: list[str], *cleaner_entries: tuple[str, str]) -> None:
+    """Loop over tuples of entry names and cleaner scripts, and run them.
+
+    Their when conditions should already be checked by `run_updaters`, so no need to recheck.
+    Cleaner script errors don't illicit a repeat prompt, so they're just logged and skipped over."""
+    for entry_name, cmd in cleaner_entries:
+        print(f"\n :: [ {entry_name + '::clean':^20} ] ::")
+        try:
+            run_command(shell, cmd)
+        except subprocess.CalledProcessError:
+            # For cleaners, we don't prompt to retry, we just go to the next one.
+            logger.warning(f"The `clean` script for {entry_name} failed. Continuing...")
+            continue
 
 
 @click.command()
@@ -79,27 +135,9 @@ def main(config_file: Path, verbose: int) -> None:
         sys.exit(1)
     logger.debug(f"{user_config = }")
 
-    # Main functionality
-    # 1. Loop over all entries
-    # 2. Determine if they should run by checking all WhenConditions and store in `should_run`
-    # 3. Store entry.clean in list for later if it needs run
-    # 4. If should_run is true, run each entry.update command
-    clean_cmds: list[tuple[str, str]] = []
-
+    # Loop over updaters
     print("Running Updaters ...")
+    clean_cmds = run_updaters(user_config.shell, *user_config.entries)
 
-    for entry in user_config.entries:
-        should_run = resolve_when_conditions(*entry.when)
-        if should_run:
-            if entry.clean is not None:
-                clean_cmds += [(entry.name, entry.clean)]
-            print(f"\n :: [ {entry.name + '::update':^20} ] ::")
-            run_command(user_config, entry.update)
-
-    for entry_name, cmd in clean_cmds:
-        print(f"\n :: [ {entry_name + '::clean':^20} ] ::")
-        try:
-            run_command(user_config, cmd)
-        except subprocess.CalledProcessError:
-            logger.warning(f"The `clean` script for {entry_name} failed. Continuing...")
-            continue
+    # Loop over cleaners
+    run_cleaners(user_config.shell, *clean_cmds)
