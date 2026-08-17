@@ -8,4 +8,5 @@ test:
 
 # Push to Github along with tags that track pushed commits
 push:
-    git push origin --follow-tags
+    git push origin
+    if git describe --tags --exact-match >/dev/null 2>&1; then git push --tags; fi
