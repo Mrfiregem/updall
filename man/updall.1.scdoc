@@ -1,0 +1,47 @@
+UPDALL(1)
+
+# Name
+
+updall - simple update utility
+
+# SYNOPSIS
+
+updall [...FLAGS]
+
+# DESCRIPTION
+
+The updall command reads a list of entries from its configuration file,
+runs their update scripts in order, then runs their cleanup scripts in order
+once updates are finished.
+
+# FLAGS
+
+|[ -h
+:[ --help
+:[
+:< Show help and exit.
+|  -V
+:  --version
+:[
+:  Show version and exit.
+|  -v
+:  --verbose
+:[
+:  Output debug info to stderr (repeatable).
+|  -c
+:  --config-file
+:  _FILE_
+:  Alternate location of the config file.
+|  -d
+:  --disable
+:  _ENTRY_
+:  Disable an entry by name (repeatable).
+|  -n
+:  --dry-run
+:[
+:  Only print which updaters would run.
+
+
+# SEE ALSO
+
+_updall_(5)

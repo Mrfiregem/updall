@@ -1,0 +1,88 @@
+UPDALL(5)
+
+# NAME
+
+updall - YAML schema for writing configuration.
+
+# LOCATION
+
+_updall_ looks for its configuration in the following locations, based on operating system:
+
+- Windows
+    - _C:\\Users\\<User>\\AppData\\Local\\updall\\config.yaml_
+- Linux
+    - _~/.config/updall/config.yaml_
+- MacOS
+    - _~/Library/Application Support/updall/config.yaml_
+
+# SCHEMA
+
+## Top-Level
+
+The most basic config file would be a single key, *entries*, mapping to an empty list,
+but below are all configuration options available.
+
+[- *Key*
+:- *Type*
+:- *Default*
+:- *Description*
+|  shell
+:[ _string[]_
+:[ ['/bin/sh', '-c']
+:< The shell used to run the _update_ and _clean_ scripts for each entry.
+|  log_level
+:  _0_, _1_, or _2_
+:  0
+:  The program's default log level. Ignored if _--verbose_/_-v_ is used.
+|  entries
+:  _Entry[]_
+:[
+:  *Required.* The list of updaters and cleaners to run in order.
+
+## Entry
+
+An entry is a YAML mapping consisting at minimum of a *name* and *update* key.
+These are iterated on and their *update* scripts called in order of definition,
+and once all entries' update scripts have run, all *clean* scripts are run
+afterwords in that same order.
+
+[- *Key*
+:- *Type*
+:- *Description*
+|  name
+:[ _string_
+:< *Required.* A unique identifier string.
+|  update
+:  _string_
+:  *Required.* A script passed as a string to _shell_.
+|  clean
+:  _string?_
+:  An optional second script to run after all updaters.
+|  when
+:  _WhenCondition[]_
+:  Only run this entry when *any* _WhenCondition_ resolves true.
+
+## WhenCondition
+
+A _WhenCondition_ resolves true when *all* of its defined mapping values are true.
+Below is the list of all _WhenCondition_ keys.
+
+[- *Key*
+:- *Type*
+:- *Description*
+|  has_exe
+:[ _string?_
+:< Check if the user has a specific command on their PATH.
+|  is_os
+:  _string?_
+:  Check if the user is on a specific OS.
+|  env_equals
+:  _{string: string}[]_
+:  Check that all keys are evironment variables and are set to their respective value.
+|  is_not
+:  _WhenCondition_
+:  Check that a _WhenCondition_ resolves false.
+
+# SEE ALSO
+
+_updall_(1)

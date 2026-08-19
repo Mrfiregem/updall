@@ -1,6 +1,8 @@
 # Build package .whl and .tar.gz files
 build:
     uv build
+    scdoc < man/updall.1.scdoc > dist/updall.1
+    scdoc < man/updall.5.scdoc > dist/updall.5
 
 # Run tests and show package coverage
 test:
