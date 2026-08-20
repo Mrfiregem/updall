@@ -1,8 +1,8 @@
 # Build package .whl and .tar.gz files
 build:
     uv build
-    scdoc < man/updall.1.scdoc > dist/updall.1
-    scdoc < man/updall.5.scdoc > dist/updall.5
+    @command -v scdoc >/dev/null 2>&1 && { scdoc < man/updall.1.scdoc > dist/updall.1; echo 'Built manpage scdoc.1'; } || :
+    @command -v scdoc >/dev/null 2>&1 && { scdoc < man/updall.5.scdoc > dist/updall.5; echo 'Built manpage scdoc.5'; } || :
 
 # Run tests and show package coverage
 test:
