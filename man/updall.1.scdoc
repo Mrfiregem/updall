@@ -40,6 +40,10 @@ once updates are finished.
 :  --dry-run
 :[
 :  Only print which updaters would run.
+|  -C
+:  --clean
+:[
+:  Don't update. Only run cleaners.
 
 
 # SEE ALSO

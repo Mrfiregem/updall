@@ -14,8 +14,9 @@ Options:
   -v, --verbose           Output debug info to stderr. Pass multiple times to
                           show more logging.
   -c, --config-file FILE  Alternate location of the config file.
-  -d, --disable TEXT      Disable an entry (repeatable).
+  -d, --disable ENTRY     Disable an entry (repeatable).
   -n, --dry-run           Only print what updaters would run.
+  -C, --clean             Don't update. Only run cleaners.
 ```
 
 ## Installing
@@ -58,19 +59,12 @@ Running Updaters ...
  :: [   flatpak::update    ] ::
 Looking for updates…
 
+Nothing to update.
 
-        ID                                                Branch                 Op            Remote             Download
- 1. [✓] org.freedesktop.Platform.GL.default               25.08                  u             flathub             69.7 MB / 146.0 MB
- 2. [✓] org.freedesktop.Platform.GL.default               25.08-extra            u             flathub              3.6 MB / 146.1 MB
- 3. [✓] org.freedesktop.Platform.Locale                   25.08                  u             flathub             18.5 kB / 379.4 MB
- 4. [✓] org.freedesktop.Platform.codecs-extra             25.08-extra            u             flathub            698.8 kB / 14.6 MB
- 5. [✓] org.freedesktop.Sdk.Locale                        25.08                  u             flathub             18.5 kB / 395.2 MB
- 6. [✓] org.freedesktop.Sdk                               25.08                  u             flathub             29.3 MB / 606.7 MB
- 7. [✓] org.freedesktop.Platform                          25.08                  u             flathub              3.4 MB / 257.1 MB
+ :: [   uv-tools::update   ] ::
+Nothing to upgrade
 
-Updates complete.
-
- :: [    paru::update    ] ::
+ :: [     paru::update     ] ::
 [sudo] password for user:
 no new news
 :: Looking for PKGBUILD upgrades...
@@ -96,8 +90,9 @@ no new news
  :: [    flatpak::clean    ] ::
 Nothing unused to uninstall
 
- :: [    paru::clean     ] ::
+ :: [     paru::clean      ] ::
  there is nothing to do
+==> no candidate packages found for pruning
 ```
 
 ## Config Reference
@@ -166,6 +161,11 @@ entries:
       - has_exe: flatpak
         is_os: Linux
 
+  - name: uv-tools
+    update: uv tool upgrade --all
+    when:
+      - has_exe: uv
+
   - name: scoop
     update: scoop update --all
     when:
@@ -174,7 +174,9 @@ entries:
 
   - name: paru
     update: paru
-    clean: paru -c
+    clean: |-
+      paru -c
+      command -v paccache >/dev/null && paccache -r
     when:
       - has_exe: paru
         is_os: Linux
@@ -182,6 +184,7 @@ entries:
   - name: pacman
     update: sudo pacman -Syu
     when:
-      - is_not:
+      - is_os: Linux
+        is_not:
           has_exe: paru
 ```

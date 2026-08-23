@@ -11,6 +11,7 @@ from click.testing import CliRunner
 
 import updall
 import updall.config
+import updall.run
 
 logging.basicConfig(stream=sys.stderr, level=logging.DEBUG)
 
@@ -29,11 +30,6 @@ def fake_config_dir(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> Path:
     return config
 
 
-def test_app_name():
-    actual = updall.get_app_name()
-    assert actual == "updall"
-
-
 @pytest.mark.parametrize(
     "verbosity,expected",
     [(0, logging.WARNING), (1, logging.INFO), (2, logging.DEBUG)],
@@ -43,12 +39,12 @@ def test_log_verbosity(verbosity: int, expected: int):
 
 
 def test_run_command_success(default_config: updall.config.UpdAllConfig):
-    updall.run_command(default_config.shell, "true")
+    updall.run.run_command(default_config.shell, "true")
 
 
 def test_run_command_failure(default_config: updall.config.UpdAllConfig):
     with pytest.raises(subprocess.SubprocessError):
-        updall.run_command(default_config.shell, "false")
+        updall.run.run_command(default_config.shell, "false")
 
 
 def test_commandline_bare_config(fake_config_dir: Path):
