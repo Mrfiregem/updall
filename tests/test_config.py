@@ -72,6 +72,12 @@ def test_resolve_when_conditions(monkeypatch: pytest.MonkeyPatch):
         uc.WhenCondition(is_os="NotWindows"),
         uc.WhenCondition(env_equals={"FOO": "bar"}),
         uc.WhenCondition(is_not=uc.WhenCondition(env_equals={"FOO": "baz"})),
+        uc.WhenCondition(
+            all=[
+                uc.WhenCondition(env_equals={"FOO": "baz"}),
+                uc.WhenCondition(has_exe="another-fake-command"),
+            ]
+        ),
     ],
 )
 def test_resolve_failed_when_condition(

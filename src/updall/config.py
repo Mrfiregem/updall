@@ -16,11 +16,18 @@ class WhenCondition(BaseModel):
 
     has_exe: str | None = None
     """Used to check if the caller has `exe` on their PATH."""
+
     is_os: str | None = None
     """Used to check if the caller is on Windows, Linux, or MacOS."""
+
     env_equals: dict[str, str] | None = None
     """Used to check if all environment variable dict keys exist with values equaling dict values."""
+
     is_not: WhenCondition | None = None
+    """Used to check that a `WhenCondition` does not resolve true."""
+
+    all: list[WhenCondition] | None = None
+    """Used to check that all of its conditions resolve true."""
 
 
 class PackagerEntry(BaseModel):
@@ -90,15 +97,27 @@ def resolve_when_conditions(*when_conditions: WhenCondition) -> bool:
 def resolve_when_condition(cond: WhenCondition) -> bool:
     valid_os_strings = [s.casefold() for s in (platform.system(), sys.platform)]
 
+    # `is_not` - Fails when inner condition is successful.
     if cond.is_not is not None and resolve_when_condition(cond.is_not):
         logger.debug("`is_not` inner condition resolved True")
         return False
+
+    # `all` - Fails when any of its inner conditions fail.
+    if cond.all is not None and not all(resolve_when_condition(c) for c in cond.all):
+        logger.debug("`all` inner condition resolved False.")
+        return False
+
+    # `has_exe` - Fails when given executable is not callable.
     if cond.has_exe is not None and not shutil.which(cond.has_exe):
         logger.debug("`has_exe` condition resolved False")
         return False
+
+    # `is_os` - Fails when user is not on the correct operating system.
     if cond.is_os is not None and cond.is_os.casefold() not in valid_os_strings:
         logger.debug("`is_os` condition resolved False")
         return False
+
+    # `env_equals` - Fails when any environment variable does not contain the expected value.
     if cond.env_equals is not None and not all(
         os.environ.get(key) == value for key, value in cond.env_equals.items()
     ):

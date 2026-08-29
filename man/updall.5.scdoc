@@ -82,6 +82,9 @@ Below is the list of all _WhenCondition_ keys.
 |  is_not
 :  _WhenCondition_
 :  Check that a _WhenCondition_ resolves false.
+|  all
+:  _WhenCondition[]_
+:  Check that all inner conditions resolve true.
 
 # SEE ALSO
 
