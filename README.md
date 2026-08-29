@@ -146,6 +146,11 @@ env_equals: null # e.g. {"FOO": "bar"} is true if `$FOO` is exported with value 
 
 # Checks if a when condition is *not* true
 is_not: null # e.g. {"has_exe": "/some/fake/command"}
+
+# Checks that all inner conditions resolve true.
+# This should only be required in certain cases since a `WhenCondition`
+# with multiple fields already behaves this way.
+all: null # e.g. [{is_os: Windows}, {has_exe: scoop}]
 ```
 
 ## Example Config

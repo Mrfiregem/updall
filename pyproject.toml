@@ -1,10 +1,12 @@
+#:schema https://raw.githubusercontent.com/SchemaStore/schemastore/master/src/schemas/json/pyproject.json
+
 [project]
 name = "updall"
-version = "1.5.0"
+version = "1.5.1"
 description = "Simple update utility."
 readme = "README.md"
 authors = [
-    { name = "Firegem", email = "5158194+Mrfiregem@users.noreply.github.com" }
+    { name = "Firegem", email = "5158194+Mrfiregem@users.noreply.github.com" },
 ]
 requires-python = ">=3.14"
 dependencies = [
@@ -15,7 +17,7 @@ dependencies = [
 ]
 
 [project.urls]
-Repository = "github.com/Mrfiregem/updall"
+Repository = "https://github.com/Mrfiregem/updall"
 
 [project.scripts]
 updall = "updall:main"
@@ -25,7 +27,4 @@ requires = ["uv_build>=0.12.5,<0.13.0"]
 build-backend = "uv_build"
 
 [dependency-groups]
-dev = [
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
-]
+dev = ["pytest>=9.1.1", "pytest-cov>=7.1.0"]

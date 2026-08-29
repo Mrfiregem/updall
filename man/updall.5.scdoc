@@ -44,7 +44,7 @@ but below are all configuration options available.
 An entry is a YAML mapping consisting at minimum of a *name* and *update* key.
 These are iterated on and their *update* scripts called in order of definition,
 and once all entries' update scripts have run, all *clean* scripts are run
-afterwords in that same order.
+afterwards in that same order.
 
 [- *Key*
 :- *Type*
@@ -78,7 +78,7 @@ Below is the list of all _WhenCondition_ keys.
 :  Check if the user is on a specific OS.
 |  env_equals
 :  _{string: string}[]_
-:  Check that all keys are evironment variables and are set to their respective value.
+:  Check that all keys are environment variables and are set to their respective value.
 |  is_not
 :  _WhenCondition_
 :  Check that a _WhenCondition_ resolves false.
