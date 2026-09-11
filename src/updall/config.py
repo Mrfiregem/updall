@@ -99,7 +99,7 @@ def resolve_when_condition(cond: WhenCondition) -> bool:
 
     # `is_not` - Fails when inner condition is successful.
     if cond.is_not is not None and resolve_when_condition(cond.is_not):
-        logger.debug("`is_not` inner condition resolved True")
+        logger.debug(f"`is_not` inner condition resolved True ({cond.is_not})")
         return False
 
     # `all` - Fails when any of its inner conditions fail.
@@ -109,19 +109,22 @@ def resolve_when_condition(cond: WhenCondition) -> bool:
 
     # `has_exe` - Fails when given executable is not callable.
     if cond.has_exe is not None and not shutil.which(cond.has_exe):
-        logger.debug("`has_exe` condition resolved False")
+        logger.debug(f"`has_exe` condition resolved False ({cond.has_exe})")
         return False
 
     # `is_os` - Fails when user is not on the correct operating system.
-    if cond.is_os is not None and cond.is_os.casefold() not in valid_os_strings:
-        logger.debug("`is_os` condition resolved False")
+    if (
+        cond.is_os is not None
+        and cond.is_os.casefold().replace("macos", "darwin") not in valid_os_strings
+    ):
+        logger.debug(f"`is_os` condition resolved False ({cond.is_os})")
         return False
 
     # `env_equals` - Fails when any environment variable does not contain the expected value.
     if cond.env_equals is not None and not all(
         os.environ.get(key) == value for key, value in cond.env_equals.items()
     ):
-        logger.debug("`env_equals` condition resolved False")
+        logger.debug(f"`env_equals` condition resolved False ({cond.env_equals})")
         return False
 
     return True
