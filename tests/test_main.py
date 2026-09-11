@@ -2,10 +2,12 @@ import importlib
 import logging
 import subprocess
 import sys
+from contextlib import suppress
 from pathlib import Path
 from pprint import pprint
 
 import pytest
+import rich.console
 import yaml
 from click.testing import CliRunner
 
@@ -90,7 +92,8 @@ def test_cmdline_loop_entries(fake_config_dir: Path):
 
 
 def test_no_retry_failed_entry(fake_config_dir: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr("builtins.input", lambda _: "n")  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
+    monkeypatch.setattr(rich.console.Console, "input", lambda self, *a, **kw: "n")
+
     config = fake_config_dir / "config.yaml"
     data = {"entries": [{"name": "foobar", "update": "false"}]}
     with open(config, "w") as file:
@@ -102,16 +105,23 @@ def test_no_retry_failed_entry(fake_config_dir: Path, monkeypatch: pytest.Monkey
 
 
 def test_retry_failed_entry(fake_config_dir: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setattr("builtins.input", lambda _: "y")  # pyright: ignore[reportUnknownArgumentType, reportUnknownLambdaType]
+    inputs = iter(["y", "n"])
+    monkeypatch.setattr(
+        rich.console.Console, "input", lambda self, *a, **kw: next(inputs)
+    )
 
     update_script = fake_config_dir / "fts.sh"
     check = fake_config_dir / "succeed"
+    with suppress(FileNotFoundError):
+        check.unlink()
     with open(update_script, "w") as file:
         _ = file.write(f"""
             #!/bin/sh
             if [ -e '{check!s}' ]; then
+                echo 'fts.sh succeeded'
                 true
             else
+                echo 'fts.sh failed'
                 touch '{check!s}'
                 false
             fi

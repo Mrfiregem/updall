@@ -44,6 +44,10 @@ once updates are finished.
 :  --clean
 :[
 :  Don't update. Only run cleaners.
+|[
+:  --color
+:  _WHEN_
+:  Choose when to show colored output (always, auto, or never).
 
 
 # SEE ALSO

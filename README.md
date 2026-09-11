@@ -17,6 +17,8 @@ Options:
   -d, --disable ENTRY     Disable an entry (repeatable).
   -n, --dry-run           Only print what updaters would run.
   -C, --clean             Don't update. Only run cleaners.
+  --color WHEN            When to show colored output. Does not apply to
+                          updaters or cleaners.
 ```
 
 ## Installing

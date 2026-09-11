@@ -2,6 +2,8 @@ import logging
 import shlex
 import subprocess
 
+import rich
+
 from updall.config import PackagerEntry, resolve_when_conditions
 
 logger = logging.getLogger(__name__)
@@ -24,6 +26,7 @@ def run_updaters(
     disabled: list[str],
     dry_run: bool,
     clean: bool,
+    console: rich.console.Console,
 ) -> list[tuple[str, str]]:
     """Loop over entries, run their updaters, and return a list of tuples of their names and cleaner scripts.
 
@@ -40,20 +43,24 @@ def run_updaters(
         logger.debug(f"{should_run = }")
         if should_run:
             if not clean:
-                print(f"\n :: [ {entry.name + '::update':^20} ] ::")
+                console.print(
+                    f"\n [dim]::[/dim] [ [cyan bold]{entry.name + '[/cyan bold]::[bold]update[/bold]':^20} ] [dim]::[/dim]"
+                )
             if entry.clean is not None:
                 clean_cmds += [(entry.name, entry.clean)]
             while True:
                 try:
                     if dry_run and not clean:
-                        print(f"Would run: << {shlex.join(shell + [entry.update])} >>")
+                        console.print(
+                            f"[dim]Would run:[/dim] << {shlex.join(shell + [entry.update])} >>"
+                        )
                     elif not dry_run:
                         run_command(shell, entry.update)
                 except subprocess.CalledProcessError:
                     # If command exited with non-zero exit code, or failed,
                     # ask user if they want to skip to the next updater or try again.
-                    answer = input(
-                        f"Running update script for {entry.name} failed. Try again? [y/N]: "
+                    answer = console.input(
+                        f"Running update script for [cyan bold]{entry.name}[/cyan bold] failed. Try again? \\[y/N]: "
                     )
                     if answer.casefold().startswith("y"):
                         continue
@@ -65,17 +72,24 @@ def run_updaters(
 
 
 def run_cleaners(
-    shell: list[str], *cleaner_entries: tuple[str, str], dry_run: bool = False
+    shell: list[str],
+    *cleaner_entries: tuple[str, str],
+    dry_run: bool = False,
+    console: rich.console.Console,
 ) -> None:
     """Loop over tuples of entry names and cleaner scripts, and run them.
 
     Their when conditions should already be checked by `run_updaters`, so no need to recheck.
     Cleaner script errors don't illicit a repeat prompt, so they're just logged and skipped over."""
     for entry_name, cmd in cleaner_entries:
-        print(f"\n :: [ {entry_name + '::clean':^20} ] ::")
+        console.print(
+            f"\n [dim]::[/dim] [ [cyan bold]{entry_name + '[/cyan bold]::[bold]clean[/bold]':^20} ] [dim]::[/dim]"
+        )
         try:
             if dry_run:
-                print(f"Would run: << {shlex.join(shell + [cmd])} >>")
+                console.print(
+                    f"[dim]Would run:[/dim] << {shlex.join(shell + [cmd])} >>"
+                )
             else:
                 run_command(shell, cmd)
         except subprocess.CalledProcessError:

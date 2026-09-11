@@ -2,7 +2,7 @@
 
 [project]
 name = "updall"
-version = "1.5.1"
+version = "1.5.2"
 description = "Simple update utility."
 readme = "README.md"
 authors = [
@@ -10,10 +10,11 @@ authors = [
 ]
 requires-python = ">=3.14"
 dependencies = [
-    "click>=8.4.2",
-    "platformdirs>=4.11.3",
-    "pydantic>=2.13.4",
-    "pyyaml>=6.0.3",
+    "click~=8.4.2",
+    "platformdirs~=4.11.3",
+    "pydantic~=2.13.4",
+    "pyyaml~=6.0.3",
+    "rich~=15.0.0",
 ]
 
 [project.urls]

@@ -1,9 +1,12 @@
 import logging
 import sys
 from pathlib import Path
+from typing import Literal
 
 import click
 from platformdirs import user_config_path
+from rich.console import Console
+from rich.logging import RichHandler
 
 from updall.config import read_config
 from updall.run import run_cleaners, run_updaters
@@ -55,13 +58,31 @@ def get_log_level(verbosity: int) -> int:
     "-n", "--dry-run", is_flag=True, help="Only print what updaters would run."
 )
 @click.option("-C", "--clean", is_flag=True, help="Don't update. Only run cleaners.")
+@click.option(
+    "--color",
+    metavar="WHEN",
+    type=click.Choice(["always", "auto", "never"]),
+    default="auto",
+    help="When to show colored output. Does not apply to updaters or cleaners.",
+)
 def main(
-    config_file: Path, verbose: int, disable: list[str], dry_run: bool, clean: bool
+    config_file: Path,
+    verbose: int,
+    disable: list[str],
+    dry_run: bool,
+    clean: bool,
+    color: Literal["always", "auto", "never"],
 ) -> None:
     """A simple package manager update runner."""
+    # Setup colored terminal output
+    console = Console(no_color=None if color == "auto" else color == "never")
+
     # Setup logging using verbosity flag
     logging.basicConfig(
-        level=get_log_level(verbose), format="%(levelname)s: %(message)s"
+        level=get_log_level(verbose),
+        format="%(message)s",
+        datefmt="[%X]",
+        handlers=[RichHandler(console=console, rich_tracebacks=True)],
     )
 
     # Set config file to user's file if click verifies it exists as a readable file
@@ -85,7 +106,8 @@ def main(
         disabled=disable,
         dry_run=dry_run or clean,
         clean=clean,
+        console=console,
     )
 
     # Loop over cleaners
-    run_cleaners(user_config.shell, *clean_cmds, dry_run=dry_run)
+    run_cleaners(user_config.shell, *clean_cmds, dry_run=dry_run, console=console)
