@@ -208,4 +208,3 @@ Below are things that will most likely be added later at an unspecified time.
 - Ability to define entries that only have a `clean` field (unsure about this one)
 - Config or flag to auto-deny the retry prompt
 - Let `macos` be used in place of `darwin` in when conditions
-- Use ansi colors (with NO_COLOR and `--color=(when)` support)
